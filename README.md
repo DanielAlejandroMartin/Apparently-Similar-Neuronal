@@ -15,6 +15,7 @@ Required Packages:
 numpy (https://numpy.org/)
 matplotlib (https://matplotlib.org/)
 networkx  (https://networkx.org/)
+random (https://docs.python.org/3/library/random.html)
 and
 datatime (https://docs.python.org/3/library/datetime.html),
 
@@ -23,10 +24,11 @@ which can be installed on the command line terminal as:
 sudo apt-get install python3-numpy
 sudo apt-get install python3-matplotlib
 sudo pip install networkx
-and,
 sudo apt-get install python3-datatime
+and,
+sudo apt-get install python3-random
 
-Documentation for those packages can be found at their respective webpages
+Documentation for those packages can be found at their respective webpages. matplotlib and datatime are for ploting and time measuring, and can be omitted. In that case, you should comment the lines where respective routines are called.
 
 
 Program Execution:
@@ -36,11 +38,20 @@ Fortran codes can be compiled and run on a linux or Mac terminal typing gfortran
   and then ./<desired_output_code>
   
 Python 3 Codes can be run from a terminal typing python3 <desired_code>.py
+Be sure to have all required packages.  
   
-  
-Program Description:  
---------------------
-  
+Python 3 Program Description:  
+-----------------------------
+  The following codes have been uploaded. I all cases, the mames of the parameters are described in the code, and follow the maiming used on the main text.
+ 
+ GH.py: runs the Greenberg & Hastings implementation on a Watts-Strogatz undirected network. 
+ 
+ KC_m/b/l: runs the Kinouchi & Copelli main/backwards/local implementation on a Watts-Strogatz undirected network.
+ 
+ 
+  Fortran 90 Program Description:  
+---------------------------------
+ 
   
   
   
