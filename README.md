@@ -44,7 +44,7 @@ Python 3 Program Description:
 -----------------------------
   The following codes have been uploaded. I all cases, the mames of the parameters are described in the code, and follow the maiming used on the main text.
  
- GH.py: runs the Greenberg & Hastings implementation on a Watts-Strogatz undirected network. 
+ GH.py: runs the Greenberg & Hastings model on a Watts-Strogatz undirected network. 
  
  KC_m/b/l: runs the Kinouchi & Copelli main/backwards/local implementation on a Watts-Strogatz undirected network.
  
@@ -52,7 +52,13 @@ Python 3 Program Description:
   Fortran 90 Program Description:  
 ---------------------------------
  
-  
+ 
+WSmatrix.f90: Program for generating a Watts Strogatz network of "N" nodes, average degree "Avg_degree" and rewiring probability "Pi"
+ The output is "MyMatrix.txt", and consists of N x Avg_degree /2 rows. Each row represents a link.
+
+GH_model.f90: Fortran 90 implementation of the Greenberg & Hastings  model on a Watts-Strogatz undirected network.
+ 
+KC_m/b/l: :Fortran 90 code for the Kinouchi & Copelli main/backwards/local implementation on a Watts-Strogatz undirected network.
   
   
 
