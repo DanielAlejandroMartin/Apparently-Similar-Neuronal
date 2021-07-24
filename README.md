@@ -48,6 +48,11 @@ Python 3 Program Description:
  
  KC_m/b/l: runs the Kinouchi & Copelli main/backwards/local implementation on a Watts-Strogatz undirected network.
  
+ main: activation j -> i with probability p W_ij   (p is also called p_max in other references, W_{ij}=W_{ji} random uniform from 0 to 1. Loop is done over active neurons.
+ backward: same as main. Loop is done over quiescent neurons.
+ local: local rules where the probability depends on the number of neighbors.
+ 
+ 
  
   Fortran 90 Program Description:  
 ---------------------------------
