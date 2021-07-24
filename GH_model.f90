@@ -1,0 +1,163 @@
+!This is the Fortran 90 code the KC model main implementation in
+!"Apparently similar neuronal dynamics may lead to different collective repertoire"
+! main program chooses a series of T values and calls "ConstantStep" Subroutine
+! "ConstantStep" runs "stepnum" steps for each value of T, calling "Step" subroutine each time
+! "Step" subroutine updates the state of each neuron simultaneously.
+! The program returns f_s and AC(1) for each value of T
+!
+!
+!compile using gfortran -O3 GH_model.f90
+!run with ./a.out on a terminal
+
+
+module variables
+!Network parameters 
+	integer,parameter::  N= 20000 !=Number of Neurons= Network size
+	integer,parameter:: Avg_degree=10 !=<k> here in degree is equal to out degree
+	integer,parameter:: Nbonds=N*Avg_degree/2
+!Time Parameters
+	integer,parameter::stepnum=50000    !number of steps at each value of T
+	integer,parameter::     MeassTime=0.9*stepnum
+	integer,parameter::   transient=0.1*stepnum
+!Model Parameters
+	real(8),parameter:: r1= 0.001  !Spontaneous activation 
+	real(8),parameter:: r2= 0.3 !Refractory to Quiescent probability 
+	real(8),parameter:: lambda=12.5
+!Threshold Variables
+	real(8)::  T  ! Threshold T
+	real(8),parameter::  Delta_T=0.005 ! Threshold Change
+	real(8),parameter:: T_0=0.00
+	real(8),parameter:: T_F=0.3
+!Neuron States and  Neighbor lists
+	integer S(1:N) !Neuron State
+	integer S_prev(1:N) !Previous Neuron State
+	integer,parameter:: x1=5*Avg_degree
+	integer,dimension(N):: MyNeighbors=0 ! MyNeighbors(i) = Ammount of neighbors of i
+	integer,dimension(N,x1):: NeighborMat=0 ! NeighborMat(i,k)= identity of the k-tjh neighbor of i
+	real(8),dimension(N,x1):: Wij=0 ! Wij(i,k)= weight of the k-tjh connetcion of i, i.e., the conection with  NeighborMat(i,k)
+	real(8)::weight    
+!OBSERVABLES		
+	integer:: activity,prev_activity
+	real(8):: AVGact,AVGact2,AvgActPrev
+	real(8):: f_s, varf_s,AC1  !fraction of actives, variance of activity and first autocorrelation coefficient
+!AUXILIAR VARIABLES
+	integer it !iteration step
+	integer i,j, jj,k
+	real(8) p !for random numbers
+end module
+
+program GH
+use variables
+implicit none   
+
+!Load connection matrix and generate weights
+open(99,file= "MyMatrix.txt",status="old",action="read")
+do k=1,Nbonds
+read(99,*) i,j
+p=rand(); weight=-log(p)/lambda
+
+MyNeighbors(i)=MyNeighbors(i)+1
+NeighborMat(i,MyNeighbors(i))=j
+Wij(i,MyNeighbors(i))=weight
+				
+MyNeighbors(j)=MyNeighbors(j)+1
+NeighborMat(j,MyNeighbors(j))=i
+Wij(j,MyNeighbors(j))=weight				
+enddo	    
+close(99)
+
+!Random Initial Condition
+do i=1,N;	p=rand(); S(i)= int(p*3); enddo
+! RUN
+
+
+open(101,file= "Results.txt",status="unknown")
+do T = T_0,T_F,Delta_T
+call ConstantStep
+enddo !T 
+close(101)
+
+! RUN decreasing T 
+open(101,file= "BackResults.txt",status="unknown")
+do T = T_F,T_0,-Delta_T
+call ConstantStep
+enddo !T 
+close(101)
+
+end program
+
+
+subroutine ConstantStep !Runs "stepnum" steps at a fixed value of T
+use variables;
+implicit none
+
+!Transient
+do it=1,transient;call step;enddo
+!Now we compute variables
+avgact=0 !Average Activity
+avgact2=0 !Average Activity**2
+AvgActPrev=0 !Average Activity(t)*Activity(t-1)
+
+do it=1,MeassTime;
+prev_activity=activity;
+call step 
+
+avgact=avgact+activity
+avgact2=avgact2+activity**2
+AvgActPrev=AvgActPrev+activity*prev_activity
+
+enddo
+avgact=avgact/real(measstime)
+avgact2=avgact2/real(measstime)
+AvgActPrev=AvgActPrev/real(measstime)
+
+f_s= avgact/real(N)
+varf_s= real(avgact2-avgact**2)/real(N)**2
+AC1= real((AvgActPrev-avgact**2)/(avgact2-avgact**2))
+
+write(101,*) real(T ),f_s, varf_s, AC1
+write(*,*) real(T ),f_s, varf_s, AC1
+end subroutine
+
+!------------------------------------------------
+subroutine step
+!Generates new State (S) from previous state (S_prev)
+use variables;
+implicit none
+real(8) sum_transmit
+
+S_prev=S
+Activity=0
+do i=1,N
+!Previously active -> Refractory Always
+	if (S_prev(i).eq.1) then; S(i)=2  ; endif
+!Refractary becomes Quiescent with probability r_2       
+	if (S_prev(i).eq.2)then
+	 p=rand()
+		if (p<r2) then; S(i)=0;
+		else;  S(i)=2 ;  endif               
+	endif
+!Previously Quiescent- > Excited 
+	if (S_prev(i).eq.0)then
+		s(i)=0
+! Spontaneous Activation     
+		p=rand()
+		if (p<r1)then
+			S(i)=1;     
+		else;  
+! Transmitted activation
+		sum_transmit=0; 
+		do k=1,MyNeighbors(i)
+			j=NeighborMat(i,k)
+			if (S_prev(j)==1) sum_transmit=sum_transmit+Wij(i,k)
+		end do           
+		if(sum_transmit > T ) S(i)=1
+        end if
+	endif
+! Now we count active neurons        
+if (S(i)==1) then
+activity=activity+1
+!if (i<301) write(*,*) it,i
+endif
+end do !i
+end subroutine
